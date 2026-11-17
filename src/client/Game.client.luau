@@ -1,88 +1,89 @@
--- A square that moves with the arrow keys inside a grey box.
+-- Giggle Grove: the small client bits that are not the HUD. A toast names the
+-- zone you walk into, and a controls strip at the bottom-left reminds new
+-- players how to catch a friend. Both read only; the server owns the game.
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-local ARENA_WIDTH = 640
-local ARENA_HEIGHT = 480
-local SQUARE_SIZE = 48
-local SPEED = 320 -- pixels per second
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local CharacterData = require(Shared.CharacterData)
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "GameGui"
+gui.Name = "GiggleGroveToasts"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
+gui.Parent = playerGui
 
-local background = Instance.new("Frame")
-background.Name = "Background"
-background.Size = UDim2.fromScale(1, 1)
-background.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-background.BorderSizePixel = 0
-background.Parent = gui
+local toast = Instance.new("TextLabel")
+toast.Name = "ZoneToast"
+toast.AnchorPoint = Vector2.new(0.5, 0)
+toast.Position = UDim2.new(0.5, 0, 0, 232)
+toast.Size = UDim2.fromOffset(480, 40)
+toast.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+toast.BackgroundTransparency = 0.35
+toast.TextColor3 = Color3.fromRGB(255, 255, 255)
+toast.TextStrokeTransparency = 0.2
+toast.TextSize = 22
+toast.Font = Enum.Font.GothamBold
+toast.Visible = false
+toast.Parent = gui
+local toastCorner = Instance.new("UICorner")
+toastCorner.CornerRadius = UDim.new(0, 10)
+toastCorner.Parent = toast
 
-local title = Instance.new("TextLabel")
-title.Name = "Hint"
-title.AnchorPoint = Vector2.new(0.5, 0)
-title.Position = UDim2.new(0.5, 0, 0.5, -ARENA_HEIGHT / 2 - 56)
-title.Size = UDim2.fromOffset(ARENA_WIDTH, 40)
-title.BackgroundTransparency = 1
-title.Text = "Use the arrow keys to move the square"
-title.TextColor3 = Color3.fromRGB(230, 230, 230)
-title.TextSize = 24
-title.Font = Enum.Font.SourceSans
-title.Parent = background
+local controls = Instance.new("TextLabel")
+controls.Name = "ControlsHint"
+controls.AnchorPoint = Vector2.new(0, 1)
+controls.Position = UDim2.new(0, 16, 1, -16)
+controls.Size = UDim2.fromOffset(420, 30)
+controls.BackgroundTransparency = 1
+controls.Text = "WASD move - E catch - carry home - deposit on the green pad"
+controls.TextColor3 = Color3.fromRGB(255, 255, 255)
+controls.TextStrokeTransparency = 0.4
+controls.TextSize = 16
+controls.Font = Enum.Font.Gotham
+controls.TextXAlignment = Enum.TextXAlignment.Left
+controls.Parent = gui
 
-local arena = Instance.new("Frame")
-arena.Name = "Arena"
-arena.AnchorPoint = Vector2.new(0.5, 0.5)
-arena.Position = UDim2.fromScale(0.5, 0.5)
-arena.Size = UDim2.fromOffset(ARENA_WIDTH, ARENA_HEIGHT)
-arena.BackgroundColor3 = Color3.fromRGB(110, 110, 110)
-arena.BorderColor3 = Color3.fromRGB(30, 30, 30)
-arena.BorderSizePixel = 2
-arena.Parent = background
+local currentZone = ""
+local toastUntil = 0
 
-local square = Instance.new("Frame")
-square.Name = "Square"
-square.Size = UDim2.fromOffset(SQUARE_SIZE, SQUARE_SIZE)
-square.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-square.BorderColor3 = Color3.fromRGB(30, 30, 30)
-square.BorderSizePixel = 2
-square.Parent = arena
-
--- The square's top-left corner inside the arena, starting in the middle.
-local x = (ARENA_WIDTH - SQUARE_SIZE) / 2
-local y = (ARENA_HEIGHT - SQUARE_SIZE) / 2
-
-local function place()
-	square.Position = UDim2.fromOffset(math.floor(x + 0.5), math.floor(y + 0.5))
+local function zoneAt(position)
+	for _, zone in ipairs(CharacterData.ZONES) do
+		if math.abs(position.X - zone.center.X) <= zone.halfSize
+			and math.abs(position.Z - zone.center.Z) <= zone.halfSize then
+			return zone
+		end
+	end
+	return nil
 end
 
-place()
-gui.Parent = player:WaitForChild("PlayerGui")
-
-RunService.RenderStepped:Connect(function(dt)
-	local dx = 0
-	local dy = 0
-	if UserInputService:IsKeyDown(Enum.KeyCode.Left) then
-		dx -= 1
-	end
-	if UserInputService:IsKeyDown(Enum.KeyCode.Right) then
-		dx += 1
-	end
-	if UserInputService:IsKeyDown(Enum.KeyCode.Up) then
-		dy -= 1
-	end
-	if UserInputService:IsKeyDown(Enum.KeyCode.Down) then
-		dy += 1
-	end
-	if dx == 0 and dy == 0 then
+local lastCheck = 0
+RunService.Heartbeat:Connect(function()
+	if os.clock() - lastCheck < 0.5 then
 		return
 	end
-	x = math.clamp(x + dx * SPEED * dt, 0, ARENA_WIDTH - SQUARE_SIZE)
-	y = math.clamp(y + dy * SPEED * dt, 0, ARENA_HEIGHT - SQUARE_SIZE)
-	place()
+	lastCheck = os.clock()
+	if toast.Visible and os.clock() > toastUntil then
+		toast.Visible = false
+	end
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local zone = zoneAt(root.Position)
+	local zoneName = zone and zone.name or ""
+	if zoneName ~= currentZone then
+		currentZone = zoneName
+		if zone then
+			toast.Text = zone.name .. " - " .. zone.blurb
+			toast.Visible = true
+			toastUntil = os.clock() + 3
+		end
+	end
 end)
