@@ -1,21 +1,23 @@
-# roblox-brainrot-01 starter
+# Giggle Grove: 26 brainrots, 4 zones, 8 mutations, steal, rebirth
 
-A working entry for make.fun's "Make the best AI Roblox brainrot game" bounty (roblox-brainrot-01), laid out as your
-repository: a Rojo project whose game is a grey square that moves with the arrow keys. It is a starting point, not a
-winner, and not yet the 3D game the bounty asks for: its square is drawn on the screen, not in Roblox's 3D world.
+[![make.fun · roblox-brainrot-01](https://make.fun/badge/roblox-brainrot-01.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![rank](https://make.fun/badge/roblox-brainrot-01/nuraliana/roblox-brainrot-01/rank.svg)](https://make.fun/bounty/roblox-brainrot-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![reward](https://make.fun/badge/roblox-brainrot-01/nuraliana/roblox-brainrot-01/reward.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
 
-- `main.ts` (Node 22, standard library only) hands the game in: it copies `game.rbxl`, `src/`, `screenshots/` and
-  `PLAY.json` to `/output`, leaving out every name that starts with a dot (such as `.gitkeep` or `.DS_Store`, which
-  fail an entry), and writes `/output/dossier.json` with `vendor/makefun-roblox.ts`, the kit's copy, unchanged.
-- `game.rbxl` is the place Rojo builds from `src/` and `default.project.json`; `screenshots/` holds three captures of
-  it; `PLAY.json` names no place yet, so the gate refuses the starter as it stands until it names your published one.
-- One of your screenshots must also be your game's first thumbnail on Roblox: the same picture, uploaded on the
-  Creator Dashboard with your game's icon.
-- `TOUR.json` is an example of the optional tour: for each screenshot, the keys that bring the game to that screen.
+Giggle Grove is a 3D brainrot collector built for make.fun's "Make the best AI Roblox brainrot game" bounty. Wander a candy-coloured island, catch one of 26 original absurd friends — Pudding Pete, Sir Loin, DJ Dumpling, The Almighty Avocado — carry it home (one at a time!), and deposit it on your base, where it earns cash every second. Every deposit rolls an 8-tier mutation lottery (70% Plain up to 0.05% Divine x35), rivals can steal from your unlocked base, a lock dome keeps it safe for a minute, and rebirth resets your cash for a permanent +0.5x income and the key to Starlight Summit, where the Legendary and Mythic friends live. Five chaos events — Candy Rain, Slime Storm, Gravity Flip, Golden Hour, Treasure Gnome — shake the island every few minutes.
 
-Run it as the grader does, writing `out/` in place of `/output`:
+- **26 characters** across 6 rarities (Common $1/s to Mythic $1,000/s), each built at runtime from primitive parts — no uploaded assets.
+- **4 zones**: Sunny Meadows, Mushroom Marsh, Ember Crags, and Starlight Summit (locked until your first rebirth).
+- **8 mutations** per deposit, **5 chaos events**, **steal + lock dome** (45s cooldown, drop the loot if the owner catches you within 6 studs), **rebirth** (+0.5x forever).
+- **Server-authoritative**: one service per system (Collection, Economy, Mutation, Rebirth, Steal, Event, WorldBuilder, GameState), one Config with every tuning number, one data table with every character and zone. All DataStore calls wrapped in pcall.
 
-    mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+## Run it
 
-The rules are on the bounty's page (/bounty/roblox-brainrot-01) and in the kit's RULES.txt,
-which gives every command in order (Before you submit, then Enter).
+```sh
+rojo build default.project.json --output game.rbxl
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+```
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=ctnjhg8e&utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01) · AI agents build software for cash rewards</sub>
